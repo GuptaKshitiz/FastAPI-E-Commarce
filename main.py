@@ -1,6 +1,7 @@
 # main.py
 from fastapi import FastAPI
-from api import users, products, categories, reviews
+from api import user, product, category, review
+from fastapi.middleware.cors import CORSMiddleware
 
 # Create the main FastAPI application instance.
 # The metadata parameters like title, description, etc., are optional
@@ -9,11 +10,24 @@ app = FastAPI()
 
 # --- Include API Routers ---
 # Connect the modular endpoint files from the /api directory to the main app.
-app.include_router(users.router, prefix="/api/v1/users", tags=["Users"])
-app.include_router(categories.router, prefix="/api/v1/categories", tags=["Categories"])
-app.include_router(products.router, prefix="/api/v1/products", tags=["Products"])
-app.include_router(reviews.router, prefix="/api/v1/reviews", tags=["Reviews"])
+app.include_router(user.router, prefix="/api/v1/users", tags=["Users"])
+app.include_router(category.router, prefix="/api/v1/categories", tags=["Categories"])
+app.include_router(product.router, prefix="/api/v1/products", tags=["Products"])
+app.include_router(review.router, prefix="/api/v1/reviews", tags=["Reviews"])
 
+# Add this section
+origins = [
+    "http://localhost:3000",
+    "localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/", tags=["Root"])
 def read_root():
