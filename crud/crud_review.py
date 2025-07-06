@@ -3,7 +3,7 @@ from typing import List
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from models.models import Review
+from model.models import Review
 from schemas import ReviewCreate
 
 async def create_review(review_data: ReviewCreate, user_id: int, session: AsyncSession) -> Review:

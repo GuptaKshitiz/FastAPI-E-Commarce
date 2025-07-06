@@ -3,7 +3,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from model.models import Product
-from schema import ProductCreate
+from schemas import ProductCreate
 
 async def create_product(product_data: ProductCreate, session: AsyncSession) -> Product:
     db_product = Product.model_validate(product_data)

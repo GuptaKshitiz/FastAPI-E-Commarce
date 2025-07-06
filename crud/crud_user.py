@@ -2,7 +2,7 @@
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from models.models import User
+from model.models import User
 from schemas import UserCreate
 from core.security import get_password_hash
 
