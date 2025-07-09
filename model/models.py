@@ -1,3 +1,4 @@
+# models.py
 from typing import List, Optional
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -6,11 +7,15 @@ class User(SQLModel, table=True):
     username: str = Field(index=True, unique=True)
     password: str
     role: str = "customer"
+    
+    # This relationship is named "reviews"
     reviews: List["Review"] = Relationship(back_populates="user")
 
 class Category(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True, unique=True)
+    
+    # This relationship is named "products"
     products: List["Product"] = Relationship(back_populates="category")
 
 class Product(SQLModel, table=True):
@@ -19,8 +24,12 @@ class Product(SQLModel, table=True):
     description: str
     price: float
     category_id: int = Field(foreign_key="category.id")
-    category: Category = Relationship(back_populates="product")
-    reviews: List["Review"] = Relationship(back_populates="product")
+    
+    # Corrected: back_populates now points to "products" in the Category model
+    category: Category = Relationship(back_populates="products") 
+    
+    # This relationship is named "reviews"
+    reviews: List["Review"] = Relationship(back_populates="products")
 
 class Review(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -28,7 +37,9 @@ class Review(SQLModel, table=True):
     rating: int
 
     user_id: int = Field(foreign_key="user.id")
-    user: User = Relationship(back_populates="review")
+    # Corrected: back_populates now points to "reviews" in the User model
+    user: User = Relationship(back_populates="reviews")
 
     product_id: int = Field(foreign_key="product.id")
-    product: Product = Relationship(back_populates="review")
+    # Corrected: back_populates now points to "reviews" in the Product model
+    products: Product = Relationship(back_populates="reviews")

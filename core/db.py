@@ -1,21 +1,20 @@
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.ext.asyncio.session import AsyncSession
-from sqlalchemy.orm import sessionmaker
+# db.py
+from sqlalchemy.ext.asyncio.engine import create_async_engine
+from sqlmodel.ext.asyncio.session import AsyncSession
 from .config import settings
 
+# The engine is created the same way, just with the import from sqlmodel
 engine = create_async_engine(settings.DATABASE_URL, echo=True)
 
-AsyncSessionFactory = sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False)
-
 async def get_session():
-    async with AsyncSessionFactory() as session:
+    """
+    Dependency that provides a database session, handles transactions,
+    and ensures the session is closed.
+    """
+    async_session = AsyncSession(engine, expire_on_commit=False)
+    async with async_session as session:
         try:
             yield session
-            await session.commit()
         except Exception:
             await session.rollback()
-        finally:
-            await session.close()
+            raise
