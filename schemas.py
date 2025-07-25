@@ -24,7 +24,7 @@ class CategoryBase(SQLModel):
 
 # Properties for creating a new category (input)
 class CategoryCreate(CategoryBase):
-    name: str
+    pass
 
 # Properties to return from the API (output)
 class CategoryPublic(CategoryBase):

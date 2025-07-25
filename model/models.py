@@ -7,14 +7,14 @@ class User(SQLModel, table=True):
     username: str = Field(index=True, unique=True)
     password: str
     role: str = "customer"
-    
+
     # This relationship is named "reviews"
     reviews: List["Review"] = Relationship(back_populates="user")
 
 class Category(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True, unique=True)
-    
+
     # This relationship is named "products"
     products: List["Product"] = Relationship(back_populates="category")
 
