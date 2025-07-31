@@ -1,6 +1,6 @@
 # api/products.py
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core.db import get_session
@@ -30,6 +30,16 @@ async def get_all_products_list(
     products = await crud_product.get_all_products(session=session)
     return products
 
+@router.get( "/paginated" , response_model=List[ProductPublic]) 
+async def get_paginated_products (
+     skip: int = Query( 0 , ge= 0 , description= "How many items to skip from the beginning." ), 
+     limit: int = Query( 10 , ge= 0 , le= 100 , description= "The maximum number of items to return per page." ), 
+        session: AsyncSession = Depends(get_session) ):
+        """ Get a paginated list of all products. """
+        products = await crud_product.get_all_products_paginated(
+                skip=skip, limit=limit, session=session)
+        return products
+
 @router.get("/{product_id}", response_model=ProductPublic)
 async def get_product_details(
     product_id: int,
@@ -45,3 +55,5 @@ async def get_product_details(
             detail=f"Product with ID {product_id} not found."
         )
     return product
+
+

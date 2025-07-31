@@ -16,7 +16,8 @@ async def create_new_user(
     """
     Create a new user.
     """
-    user = await crud_user.get_user_by_username(username=user_data.username, session=session)
+    user = await crud_user.get_user_by_username(
+        username=user_data.username, session=session)
     if user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

@@ -15,7 +15,7 @@ async def create_user(user_data: UserCreate, session: AsyncSession) -> User:
     
     # Create a User instance, excluding the plain password and including the hashed one
     user_dict = user_data.model_dump(exclude={"password"})
-    db_user = User(**user_dict, hashed_password=hashed_password)
+    db_user = User(**user_dict, password=hashed_password)
     
     session.add(db_user)
     await session.commit()
