@@ -7,12 +7,17 @@ from core.db import get_session
 from crud import crud_product
 from schemas import ProductCreate, ProductPublic
 
+from typing import Annotated
+from core.auth import get_current_user, is_admin
+from model.models import User
+
 router = APIRouter()
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=ProductPublic)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=ProductPublic, dependencies=[Depends(is_admin())])
 async def create_new_product(
     product_data: ProductCreate,
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
+
 ):
     """
     Create a new product.
@@ -22,7 +27,9 @@ async def create_new_product(
 
 @router.get("/", response_model=List[ProductPublic])
 async def get_all_products_list(
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
+    *,
+    _: Annotated[User, Depends(get_current_user)]
 ):
     """
     Get a list of all products.
