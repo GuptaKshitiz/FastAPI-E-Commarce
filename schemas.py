@@ -69,3 +69,16 @@ class CategoryPublicWithProducts(CategoryPublic):
 
 class UserPublicWithReviews(UserPublic):
     reviews: List[ReviewPublic] = []
+
+class OrderCreate(SQLModel):
+    customer_name: str
+    item: str
+
+class OrderResponse(SQLModel):
+    id: int
+    customer_name: str
+    item: str
+    status: str
+
+    class Config:
+        orm_mode = True

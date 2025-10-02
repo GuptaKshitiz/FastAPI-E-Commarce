@@ -43,3 +43,10 @@ class Review(SQLModel, table=True):
     product_id: int = Field(foreign_key="product.id")
     # Corrected: back_populates now points to "reviews" in the Product model
     products: Product = Relationship(back_populates="reviews")
+
+
+class ProductOrder(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    customer_name: str
+    item: str
+    status: str = Field(default="Order Is Placed")
