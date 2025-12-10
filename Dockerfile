@@ -18,6 +18,3 @@ RUN pip install --no-cache-dir -r requirement.txt
 # 5. Copy the rest of the application code
 COPY . .
 
-# 6. Default command to run the Celery worker
-# This uses the specific path 'app.worker.celery_app' you provided.
-CMD ["celery", "-A", "worker.celery_app", "worker", "-I", "tasks", "--loglevel=info"]

@@ -1,7 +1,8 @@
 from celery import Celery
+import os
 
 celery_app = Celery(
     "worker",
-    broker="redis://host.docker.internal:6379/0",
-    backend="redis://host.docker.internal:6379/0"
+    broker=os.getenv("CELERY_BROKER_URL", "redis://redis:6379/0"),
+    backend=os.getenv("CELERY_RESULT_BACKEND", os.getenv("CELERY_BROKER_URL", "redis://redis:6379/1"))
 )

@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fastapi_ecom
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/fastapi_ecom"
+      DATABASE_SYNC_URL: "postgresql+psycopg2://postgres:postgres@db:5432/fastapi_ecom"
+      SECRET_KEY: "29-oFCiXVm9pyCtGkZVkQGxrO0RkPiqwYtTwie5SvZo"
+      ALGORITHM: "HS256"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/1"
+    depends_on:
+      - db
+      - redis
+      - worker
+    volumes:
+      - ./:/usr/src/app
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A worker.celery_app worker -I tasks --loglevel=info
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/fastapi_ecom"
+      DATABASE_SYNC_URL: "postgresql+psycopg2://postgres:postgres@db:5432/fastapi_ecom"
+      SECRET_KEY: "29-oFCiXVm9pyCtGkZVkQGxrO0RkPiqwYtTwie5SvZo"
+      ALGORITHM: "HS256"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/1"
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./:/usr/src/app
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: alembic upgrade head
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/fastapi_ecom"
+    depends_on:
+      - db
+    networks:
+      - app-network
+    restart: "no"
+
+volumes:
+  db_data:
+  redis_data:
+
+networks:
+  app-network:
+    driver: bridge
+
