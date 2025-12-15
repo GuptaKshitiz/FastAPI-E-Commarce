@@ -1,0 +1,149 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER_FILE: /run/secrets/postgres_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB_FILE: /run/secrets/postgres_db
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    secrets:
+      - postgres_user
+      - postgres_password
+      - postgres_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  backend:
+    image: fastapi-ecom-backend:latest
+    command: >
+      sh -c "
+      export DATABASE_URL=$$(cat /run/secrets/database_url) &&
+      export DATABASE_SYNC_URL=$$(cat /run/secrets/database_sync_url) &&
+      export SECRET_KEY=$$(cat /run/secrets/secret_key) &&
+      export ALGORITHM=$$(cat /run/secrets/algorithm) &&
+      export CELERY_BROKER_URL=$$(cat /run/secrets/celery_broker_url) &&
+      export CELERY_RESULT_BACKEND=$$(cat /run/secrets/celery_result_backend) &&
+      export GUNICORN_WORKERS=$$(cat /run/secrets/gunicorn_workers) &&
+      exec gunicorn --workers $${GUNICORN_WORKERS} --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 main:app --access-logfile /tmp/log.txt
+      "
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+    networks:
+      - app-network
+    secrets:
+      - database_url
+      - database_sync_url
+      - secret_key
+      - algorithm
+      - celery_broker_url
+      - celery_result_backend
+      - gunicorn_workers
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    deploy:
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    image: fastapi-ecom-backend:latest
+    command: >
+      sh -c "
+      export DATABASE_URL=$$(cat /run/secrets/database_url) &&
+      export DATABASE_SYNC_URL=$$(cat /run/secrets/database_sync_url) &&
+      export SECRET_KEY=$$(cat /run/secrets/secret_key) &&
+      export ALGORITHM=$$(cat /run/secrets/algorithm) &&
+      export CELERY_BROKER_URL=$$(cat /run/secrets/celery_broker_url) &&
+      export CELERY_RESULT_BACKEND=$$(cat /run/secrets/celery_result_backend) &&
+      exec celery -A worker.celery_app worker -I tasks --loglevel=info
+      "
+    volumes:
+      - ./:/app
+    networks:
+      - app-network
+    secrets:
+      - database_url
+      - database_sync_url
+      - secret_key
+      - algorithm
+      - celery_broker_url
+      - celery_result_backend
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  migrate:
+    image: fastapi-ecom-backend:latest
+    command: >
+      sh -c "
+      until pg_isready -h db -p 5432 -U postgres;do
+        echo 'Waiting for DB...';
+        sleep 3;
+      done &&
+      export DATABASE_URL=$$(cat /run/secrets/database_url) &&
+      exec alembic upgrade head
+      "
+    networks:
+      - app-network
+    secrets:
+      - database_url
+    deploy:
+      restart_policy:
+        condition: none
+
+secrets:
+  database_url:
+    external: true
+  database_sync_url:
+    external: true
+  secret_key:
+    external: true
+  algorithm:
+    external: true
+  celery_broker_url:
+    external: true
+  celery_result_backend:
+    external: true
+  postgres_user:
+    external: true
+  postgres_password:
+    external: true
+  postgres_db:
+    external: true
+  gunicorn_workers:
+    external: true
+
+volumes:
+  db_data:
+  redis_data:
+
+networks:
+  app-network:
+    driver: overlay
+

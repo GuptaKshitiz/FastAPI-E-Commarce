@@ -29,6 +29,10 @@ FROM python:3.10-slim
 
 RUN addgroup --system app && adduser --system --ingroup app app
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
 # 3. Set the working directory in the container
 WORKDIR /app
 
