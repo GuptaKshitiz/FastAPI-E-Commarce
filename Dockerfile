@@ -17,4 +17,3 @@ RUN pip install --no-cache-dir -r requirement.txt
 
 # 5. Copy the rest of the application code
 COPY . .
-
