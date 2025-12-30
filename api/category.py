@@ -7,6 +7,9 @@ from core.db import get_session
 from crud import crud_category
 from schemas import CategoryCreate, CategoryPublic
 
+from fastapi_cache.decorator import cache
+from fastapi_cache import FastAPICache
+
 router = APIRouter()
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=CategoryPublic)
@@ -18,9 +21,11 @@ async def create_new_category(
     Create a new product category.
     """
     new_category = await crud_category.create_category(category_data=category_data, session=session)
+    await FastAPICache.clear(namespace="get_all_category_list")
     return new_category
 
 @router.get("/", response_model=List[CategoryPublic])
+@cache(expire=300, namespace="get_all_category_list")
 async def get_all_categories_list(
     session: AsyncSession = Depends(get_session)
 ):

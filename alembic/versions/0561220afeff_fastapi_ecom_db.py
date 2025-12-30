@@ -1,8 +1,8 @@
-"""Adding tables
+"""Fastapi ecom db
 
-Revision ID: 5506842830dc
+Revision ID: 0561220afeff
 Revises: 
-Create Date: 2025-07-09 02:19:57.386911
+Create Date: 2025-09-04 05:44:57.258512
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = '5506842830dc'
+revision: str = '0561220afeff'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

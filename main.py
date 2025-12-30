@@ -1,15 +1,37 @@
 # main.py
 from fastapi import FastAPI, Request, status
-from api import user, product, category, review
+from api import user, product, category, review, weather
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+
+from contextlib import asynccontextmanager
+from fastapi_cache.backends.redis import RedisBackend
+import redis.asyncio as redis
+from core.config import get_settings
+from fastapi_cache import FastAPICache 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    redis_client = redis.Redis(
+        host="localhost",
+        port=6379,
+        db=0
+    )
+
+    FastAPICache.init(RedisBackend(redis_client), prefix="fastapi-cache")
+    yield
+    await redis_client.close()
 
 
 # Create the main FastAPI application instance.
 # The metadata parameters like title, description, etc., are optional
 # and primarily used for the automatic API documentation.
-app = FastAPI()
+app = FastAPI(
+    title="FastAPI E-Com",
+    version="1.0",
+    lifespan=lifespan
+)
 
 async def validation_exception_handler(request: Request, exc:RequestValidationError):
     friendly_error = []
@@ -29,6 +51,7 @@ app.include_router(user.router, prefix="/api/v1/users", tags=["Users"])
 app.include_router(category.router, prefix="/api/v1/categories", tags=["Categories"])
 app.include_router(product.router, prefix="/api/v1/products", tags=["Products"])
 app.include_router(review.router, prefix="/api/v1/reviews", tags=["Reviews"])
+app.include_router(weather.router, prefix="/api/v1/weather", tags=["Weather"])
 
 # Add this section
 origins = [
