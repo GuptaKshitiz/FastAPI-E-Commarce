@@ -1,0 +1,74 @@
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+    build-and-deploy:
+        runs-on: self-hosted
+
+        env:
+          IMAGE_NAME: kshitiz011/work
+          STACK_NAME: fastapi_ecom
+
+        steps:
+        - name: Checkout repository
+          uses: actions/checkout@v2
+
+        - name: Docker login
+          uses: docker/login-action@v2
+          with:
+            username: ${{ secrets.DOCKER_USERNAME }}
+            password: ${{ secrets.DOCKER_PASSWORD }}
+
+        - name: Build and push Docker image
+          run: |
+            IMAGE_TAG=${GITHUB_SHA}
+            docker build -f Dockerfile.prod -t $IMAGE_NAME:$IMAGE_TAG .
+            docker push $IMAGE_NAME:$IMAGE_TAG
+            echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+        - name: Verify image can be pulled
+          run: docker pull $IMAGE_NAME:${{ env.IMAGE_TAG }}
+
+        - name: Initialize Docker Swarm if not already
+          run: |
+            if ! docker node ls > /dev/null 2>&1; then
+                docker swarm init
+            fi
+        
+        - name: Ensure Docker secrets exist
+          run: |
+            create_secret () {
+            NAME=$1
+            VALUE=$2
+            if ! docker secret inspect $NAME >/dev/null 2>&1; then
+                echo "$VALUE" | docker secret create $NAME -
+            fi
+            }
+
+            create_secret postgres_user "${{ secrets.POSTGRES_USER }}"
+            create_secret postgres_password "${{ secrets.POSTGRES_PASSWORD }}"
+            create_secret postgres_db "${{ secrets.POSTGRES_DB }}"
+            create_secret database_url "${{ secrets.DATABASE_URL }}"
+            create_secret database_sync_url "${{ secrets.DATABASE_SYNC_URL }}"
+            create_secret secret_key "${{ secrets.SECRET_KEY }}"
+            create_secret algorithm "${{ secrets.ALGORITHM }}"
+            create_secret celery_broker_url "${{ secrets.CELERY_BROKER_URL }}"
+            create_secret celery_result_backend "${{ secrets.CELERY_RESULT_BACKEND }}"
+            create_secret gunicorn_workers "${{ secrets.GUNICORN_WORKERS }}"
+
+        - name: Update compose file with new image
+          run: |
+            sed -i "s|image: .*|image: $IMAGE_NAME:${{ env.IMAGE_TAG }}|g" compose.prod.swarm.yaml
+
+        - name: Deploy to Docker Swarm
+          run: |
+            docker stack deploy -c compose.prod.swarm.yaml $STACK_NAME
+
+        - name: Verify services are running
+          run: |
+            docker stack services $STACK_NAME
+            docker service ps ${STACK_NAME}_backend
