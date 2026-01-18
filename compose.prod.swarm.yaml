@@ -25,7 +25,6 @@ services:
       placement:
         constraints:
           - node.role == manager
-
   backend:
     image: fastapi-ecom-backend:latest
     command: >
