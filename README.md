@@ -28,32 +28,33 @@ A high-performance, asynchronous e-commerce backend built with **FastAPI**. This
 Follow these steps to deploy the application and run the internal pipelines locally.
 
 ### 1. Clone the Repository
-```bash
-git clone [https://github.com/GuptaKshitiz/FastAPI-E-Commarce.git](https://github.com/GuptaKshitiz/FastAPI-E-Commarce.git)
-cd FastAPI-E-Commarce
+`git clone https://github.com/GuptaKshitiz/FastAPI-E-Commarce.git`
+`cd FastAPI-E-Commarce`
 
-### **2. Create a Virtual Environment**
-python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+### 2. Create a Virtual Environment
+`python -m venv venv`
+`source venv/bin/activate`  *(On Windows use `venv\Scripts\activate`)*
 
-### **3. Install Dependencies**
-pip install -r requirements.txt
+### 3. Install Dependencies
+`pip install -r requirements.txt`
 
-### **4. Environment Configuration**
-Create a .env file in the root directory and configure your database and security pipelines:
-DATABASE_URL=postgresql+asyncpg://user:password@localhost/dbname
-SECRET_KEY=your_super_secret_jwt_key
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+### 4. Environment Configuration
+Create a `.env` file in the root directory and configure your database and security pipelines:
+`DATABASE_URL=postgresql+asyncpg://user:password@localhost/dbname`
+`SECRET_KEY=your_super_secret_jwt_key`
+`ACCESS_TOKEN_EXPIRE_MINUTES=30`
 
-### **5. Run the Application**
+### 5. Run the Application
 Execute the backend server using Uvicorn:
-uvicorn main:app --reload
+`uvicorn main:app --reload`
 
-### **📖 API Documentation**
+## 📖 API Documentation
+
 Once the server is running, the automated API documentation pipelines are available at:
-Swagger UI: http://127.0.0.1:8000/docs
-ReDoc: http://127.0.0.1:8000/redoc
+*   **Swagger UI:** http://127.0.0.1:8000/docs
+*   **ReDoc:** http://127.0.0.1:8000/redoc
 
-👨‍💻 Author
-Kshitiz Gupta
-[LinkedIn Profile](https://www.linkedin.com/in/kshitiz-gupta-589a3813b/)
+## 👨‍💻 Author
+
+**Kshitiz Gupta**
+*   [LinkedIn Profile](https://www.linkedin.com/in/kshitiz-gupta-589a3813b/)
